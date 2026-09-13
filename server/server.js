@@ -19,7 +19,7 @@ import QRSticker from './models/QRSticker.js';
 import QRBatch from './models/QRBatch.js';
 import { v4 as uuidv4 } from 'uuid';
 const pendingSecondaryRegistrations = new Map();
-const DUMMY_OWNER_OTP = '0708';
+const DUMMY_OWNER_OTP = '070807';
 
 // Get directory name in ES modules
 const __filename = fileURLToPath(import.meta.url);
