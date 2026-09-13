@@ -62,6 +62,10 @@ export default function ProfileSelector() {
   const [addProfilePhone, setAddProfilePhone] = useState('');
   const [addProfileContactName, setAddProfileContactName] = useState('');
   const [addProfileContactPhone, setAddProfileContactPhone] = useState('');
+  const [addProfileBloodType, setAddProfileBloodType] = useState('O+');
+  const [addProfileAllergies, setAddProfileAllergies] = useState('');
+  const [addProfileMedications, setAddProfileMedications] = useState('');
+  const [addProfileMedicalConditions, setAddProfileMedicalConditions] = useState('');
   const [addProfileLoading, setAddProfileLoading] = useState(false);
   const [addProfileError, setAddProfileError] = useState<string | null>(null);
   const [otpPurpose, setOtpPurpose] = useState<'switch' | 'add'>('switch');
@@ -240,7 +244,7 @@ export default function ProfileSelector() {
       
       // Navigate to emergency info page
       const identifier = profileData.profile.email || profileData.profile.phoneNumber;
-      navigate(`/emergencyinfo/${encodeURIComponent(identifier)}`);
+      navigate(`/emergencyinfo/${encodeURIComponent(identifier)}?qrUuid=${encodeURIComponent(uuid)}`);
     } catch (err) {
       setOtpError(err instanceof Error ? err.message : 'Failed to verify OTP');
     } finally {
@@ -281,10 +285,10 @@ export default function ProfileSelector() {
       formData.append('emergencyContacts', JSON.stringify([
         { name: addProfileContactName.trim(), phone: addProfileContactPhone.trim() }
       ]));
-      formData.append('bloodType', 'O+'); // Default
-      formData.append('allergies', 'None');
-      formData.append('medications', 'None');
-      formData.append('medicalConditions', 'None');
+      formData.append('bloodType', addProfileBloodType || 'O+');
+formData.append('allergies', addProfileAllergies.trim() || 'None');
+formData.append('medications', addProfileMedications.trim() || 'None');
+formData.append('medicalConditions', addProfileMedicalConditions.trim() || 'None');
       formData.append('mode', 'add-profile');
 
       const chatbotEditToken = sessionStorage.getItem('chatbotEditToken') || '';
@@ -311,6 +315,10 @@ export default function ProfileSelector() {
       setAddProfilePhone('');
       setAddProfileContactName('');
       setAddProfileContactPhone('');
+      setAddProfileBloodType('O+');
+      setAddProfileAllergies('');
+      setAddProfileMedications('');
+      setAddProfileMedicalConditions('');
       
       // Reload profiles
       const reloadRes = await fetch(`${apiBase}/api/v1/qr/${encodeURIComponent(uuid)}/profiles`);
@@ -524,7 +532,68 @@ export default function ProfileSelector() {
                     disabled={addProfileLoading}
                   />
                 </div>
+{/* Blood Group */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Blood Group <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={addProfileBloodType}
+                    onChange={(e) => setAddProfileBloodType(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                    disabled={addProfileLoading}
+                    required
+                  >
+                    {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((bg) => (
+                      <option key={bg} value={bg}>{bg}</option>
+                    ))}
+                  </select>
+                </div>
 
+                {/* Allergies */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Allergies (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={addProfileAllergies}
+                    onChange={(e) => setAddProfileAllergies(e.target.value)}
+                    placeholder="e.g., Penicillin, Peanuts, None"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    disabled={addProfileLoading}
+                  />
+                </div>
+
+                {/* Current Medications */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Current Medications (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={addProfileMedications}
+                    onChange={(e) => setAddProfileMedications(e.target.value)}
+                    placeholder="e.g., Insulin, BP medication, None"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    disabled={addProfileLoading}
+                  />
+                </div>
+
+                {/* Medical Conditions */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Medical Conditions (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={addProfileMedicalConditions}
+                    onChange={(e) => setAddProfileMedicalConditions(e.target.value)}
+                    placeholder="e.g., Asthma, Diabetes, Hypertension"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    disabled={addProfileLoading}
+                  />
+                </div>
                 {addProfileError && (
                   <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
                     {addProfileError}
@@ -541,6 +610,10 @@ export default function ProfileSelector() {
                       setAddProfilePhone('');
                       setAddProfileContactName('');
                       setAddProfileContactPhone('');
+                      setAddProfileBloodType('O+');
+                      setAddProfileAllergies('');
+                      setAddProfileMedications('');
+                      setAddProfileMedicalConditions('');
                       setAddProfileError(null);
                     }}
                     className="flex-1 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50"
