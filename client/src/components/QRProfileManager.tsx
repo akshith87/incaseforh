@@ -27,15 +27,28 @@ export const QRProfileManager: React.FC<QRProfileManagerProps> = ({ uuid, onOpen
 
   const fetchSlots = async () => {
     try {
+      if (!uuid) return;
       const res = await fetch(`/api/v1/qr/resolve/${uuid}`);
       const data = await res.json();
-      if (res.ok && data.slots) {
+      if (res.ok && data.slots && data.slots.length > 0) {
         setSlots(data.slots);
+      } else {
+        // Fallback: Ensure Slot 2 with "+ Add User" always appears
+        setSlots([
+          { slotNumber: 1, type: 'PRIMARY', isOwner: true, occupied: true, profile: data?.profile || null, isActive: true },
+          { slotNumber: 2, type: 'SECONDARY', isOwner: false, occupied: false, profile: null, isActive: false }
+        ]);
       }
     } catch (err) {
       console.error('Failed to load profile slots', err);
+      setSlots([
+        { slotNumber: 1, type: 'PRIMARY', isOwner: true, occupied: true, profile: null, isActive: true },
+        { slotNumber: 2, type: 'SECONDARY', isOwner: false, occupied: false, profile: null, isActive: false }
+      ]);
     } finally {
       setLoading(false);
+    }
+  };
     }
   };
 
