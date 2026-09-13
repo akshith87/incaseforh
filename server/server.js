@@ -2254,7 +2254,6 @@ if (sticker.status === 'active' && sticker.activatedBy) {
         emergencyProfileUrl,
         redirectTo: emergencyProfileUrl,
       });
-    } 
     }
 
     const activateUrl = `${frontendUrl}/activate/${sticker.uuid}`;
