@@ -2230,45 +2230,32 @@ router.get('/qr/activate/:uuid', readLimiter, async (req, res) => {
       });
     }
 
-    if (sticker.status === 'active' && sticker.activatedBy) {
-      if (sticker.type === 'b2c' || sticker.type === 'b2b') {
-        const profileSelectorUrl = `${frontendUrl}/qr/profiles/${encodeURIComponent(sticker.uuid)}`;
-        if (!wantsJson) {
-          return res.redirect(302, profileSelectorUrl);
-        }
-
-        return res.json({
-          status: 'active',
-          sticker,
-          profileSelectorUrl,
-          redirectTo: profileSelectorUrl,
-        });
-      }
-
-      const activatedBy = await EmergencyInfo.findById(sticker.activatedBy)
+if (sticker.status === 'active' && sticker.activatedBy) {
+      const activeId = sticker.activeProfileId || sticker.primaryProfileId || sticker.activatedBy;
+      const activeEmergency = await EmergencyInfo.findById(activeId)
         .select('fullName email phoneNumber dateOfBirth bloodType allergies medications medicalConditions address emergencyContacts photo bloodTypeReport prescriptionOrDischargeReport surgicalInfoReport')
         .lean();
-      const identifier =
-        activatedBy?.email || activatedBy?.phoneNumber || String(sticker.activatedBy);
 
-      // Carry the sticker uuid through so the client can offer "Add Profile" /
-      // "Switch Account" even though this is a server-side redirect (no
-      // sessionStorage access) straight from the physical sticker's QR code.
-      const emergencyProfileUrl = `${frontendUrl}/emergencyinfo/${encodeURIComponent(identifier)}?qr=${encodeURIComponent(sticker.uuid)}`;
-      const redirectTo = emergencyProfileUrl;
+      const identifier =
+        activeEmergency?.phoneNumber || activeEmergency?.email || String(activeId);
+
+      const emergencyProfileUrl = `${frontendUrl}/emergencyinfo/${encodeURIComponent(identifier)}?qrUuid=${encodeURIComponent(sticker.uuid)}`;
+
       if (!wantsJson) {
-        return res.redirect(302, redirectTo);
+        return res.redirect(302, emergencyProfileUrl);
       }
 
       return res.json({
         status: 'active',
         sticker: {
           ...sticker,
-          activatedBy,
+          activeEmergency,
         },
         emergencyProfileUrl,
-        redirectTo,
+        redirectTo: emergencyProfileUrl,
       });
+    }
+    }
     }
 
     const activateUrl = `${frontendUrl}/activate/${sticker.uuid}`;
@@ -2514,6 +2501,8 @@ router.post('/qr/activate/:uuid', createLimiter, upload.fields([
     if (!addProfileMode && (sticker.status !== 'active' || String(sticker.activatedBy || '') !== String(emergencyInfo._id))) {
       sticker.status = 'active';
       sticker.activatedBy = emergencyInfo._id;
+      sticker.primaryProfileId = emergencyInfo._id;
+      sticker.activeProfileId = emergencyInfo._id;
       if (!sticker.activatedAt) sticker.activatedAt = new Date();
       if (sticker.deactivatedAt) sticker.deactivatedAt = null;
       if (sticker.deactivatedReason) sticker.deactivatedReason = '';
