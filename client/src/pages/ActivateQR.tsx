@@ -120,13 +120,14 @@ if (!searchParams.has('edit') && (data.status === 'active' || data.sticker?.stat
       return;
     }
 
-    if (identifier) {
-      navigate(`/emergencyinfo/${encodeURIComponent(identifier)}?qrUuid=${qrParam}`, { replace: true });
-      return;
-    }
+    const phone = identifier 
+  || data?.sticker?.activatedBy?.phoneNumber 
+  || data?.sticker?.phoneNumber 
+  || data?.phoneNumber 
+  || qrParam;
 
-    navigate(`/qr/profiles/${qrParam}`, { replace: true });
-    return;
+navigate(`/emergencyinfo/${encodeURIComponent(phone)}?qrUuid=${qrParam}`, { replace: true });
+return;
   }
 }
         }
