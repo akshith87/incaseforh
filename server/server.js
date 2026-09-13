@@ -2256,7 +2256,6 @@ if (sticker.status === 'active' && sticker.activatedBy) {
       });
     }
     }
-    }
 
     const activateUrl = `${frontendUrl}/activate/${sticker.uuid}`;
     if (!wantsJson) {
