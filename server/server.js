@@ -676,9 +676,6 @@ const broadcastNewSosAlert = (alert) => {
 import { Router } from 'express';
 const router = Router();
 
-// In-memory store for pending secondary profiles awaiting OTP verification
-const pendingSecondaryRegistrations = new Map();
-const DUMMY_OWNER_OTP = '0708';
 // Auth: register first admin (protected by setup key or single-use if no key set)
 router.post('/auth/register-admin', authLimiter, async (req, res) => {
   try {
