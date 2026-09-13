@@ -102,43 +102,33 @@ export default function ActivateQR() {
         
        // If sticker is already activated and not in edit mode, jump straight to emergency info
 if (!searchParams.has('edit') && (data.status === 'active' || data.sticker?.status === 'active')) {
-  if (active) {
-    const activeSticker = data.sticker || (data as any);
-    const identifier = 
-      (typeof activeSticker.activatedBy === 'object' ? (activeSticker.activatedBy?.phoneNumber || activeSticker.activatedBy?.email) : null) ||
-      (typeof activeSticker.activatedBy === 'string' ? activeSticker.activatedBy : null) ||
-      activeSticker.phoneNumber ||
-      activeSticker.serialNumber;
+      if (active) {
+        if (data.emergencyProfileUrl) {
+          const target = data.emergencyProfileUrl.includes('?')
+            ? `${data.emergencyProfileUrl}&qrUuid=${qrParam}`
+            : `${data.emergencyProfileUrl}?qrUuid=${qrParam}`;
+          window.location.replace(target);
+          return;
+        }
 
-    const qrParam = encodeURIComponent(activeSticker.uuid || uuid);
+        const phone = identifier 
+          || data?.sticker?.activatedBy?.phoneNumber 
+          || data?.sticker?.phoneNumber 
+          || data?.phoneNumber 
+          || qrParam;
 
-    if (data.emergencyProfileUrl) {
-      const target = data.emergencyProfileUrl.includes('?') 
-        ? `${data.emergencyProfileUrl}&qrUuid=${qrParam}` 
-        : `${data.emergencyProfileUrl}?qrUuid=${qrParam}`;
-      window.location.replace(target);
-      return;
+        navigate(`/emergencyinfo/${encodeURIComponent(phone)}?qrUuid=${qrParam}`, { replace: true });
+        return;
+      }
     }
 
-    const phone = identifier 
-  || data?.sticker?.activatedBy?.phoneNumber 
-  || data?.sticker?.phoneNumber 
-  || data?.phoneNumber 
-  || qrParam;
-
-navigate(`/emergencyinfo/${encodeURIComponent(phone)}?qrUuid=${qrParam}`, { replace: true });
-return;
+    if (active) setCheck(data);
+  } catch (err) {
+    if (active) setError(err instanceof Error ? err.message : 'Failed to load sticker');
+  } finally {
+    if (active) setLoading(false);
   }
-}
-        }
-        
-        if (active) setCheck(data);
-      } catch (err) {
-        if (active) setError(err instanceof Error ? err.message : 'Failed to load sticker');
-      } finally {
-        if (active) setLoading(false);
-      }
-    };
+};
     void load();
     return () => {
       active = false;
