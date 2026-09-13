@@ -628,48 +628,7 @@ export default function EmergencyInfoDisplay() {
           <p className="text-blue-100 text-sm mt-1">Help is on the way</p>
         </div>
       </div>
-{/* Multi-Profile Active Indicator & Switcher */}
-      <div className="max-w-4xl mx-auto px-4 mt-4">
-        <div className="p-3.5 bg-white/95 backdrop-blur rounded-2xl border border-blue-100 shadow-sm flex items-center justify-between">
-          <div className="flex items-center space-x-2.5">
-            <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-            </span>
-            <span className="text-xs sm:text-sm font-medium text-gray-700">
-              Active Rider Profile: <strong className="text-gray-900 font-bold">{info?.fullName || 'Main Owner'}</strong>
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowProfileManager(!showProfileManager)}
-            className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold px-3 py-1.5 rounded-xl border border-blue-200 transition cursor-pointer"
-          >
-            {showProfileManager ? 'Hide Profiles' : 'Switch / Manage Profiles'}
-          </button>
-        </div>
 
-        {/* Expanded 3-Slot Profile Manager */}
-        {showProfileManager && (
-          <div className="mt-3">
-            <QRProfileManager
-              uuid={activeQrUuid || identifierParam || ''}
-              onOpenAddModal={() => setShowAddSecondaryModal(true)}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Add Secondary Profile Modal with Owner OTP 0708 */}
-      <AddSecondaryUserModal
-        uuid={activeQrUuid || identifierParam || ''}
-        isOpen={showAddSecondaryModal}
-        onClose={() => setShowAddSecondaryModal(false)}
-        onSuccess={() => {
-          const currentUuid = activeQrUuid || identifierParam;
-          if (currentUuid) fetchMultiProfileData(currentUuid);
-        }}
-      />
       <div className="sticky top-16 z-40 bg-white/95 backdrop-blur p-3 shadow-lg border-b-2 border-red-500">
         <div className="max-w-4xl mx-auto">
           {deviceId && (
@@ -811,25 +770,48 @@ export default function EmergencyInfoDisplay() {
         >
           📞 Call Emergency Services (108)
         </button>
-
-        {activeQrUuid && (
-          <div className="grid grid-cols-2 gap-3">
+        {/* Multi-Profile Active Indicator & Switcher */}
+        <div className="mt-6">
+          <div className="p-3.5 bg-white/95 backdrop-blur rounded-2xl border border-blue-100 shadow-sm flex items-center justify-between">
+            <div className="flex items-center space-x-2.5">
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+              </span>
+              <span className="text-xs sm:text-sm font-medium text-gray-700">
+                Active Rider Profile: <strong className="text-gray-900 font-bold">{info?.fullName || 'Main Owner'}</strong>
+              </span>
+            </div>
             <button
               type="button"
-              onClick={() => navigate(`/qr/profiles/${encodeURIComponent(activeQrUuid)}?action=add`)}
-              className="rounded-lg border-2 border-blue-600 bg-white px-3 py-3 text-sm font-bold text-blue-700 shadow-md transition-colors hover:bg-blue-50"
+              onClick={() => setShowProfileManager(!showProfileManager)}
+              className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold px-3 py-1.5 rounded-xl border border-blue-200 transition cursor-pointer"
             >
-              + Add Profile
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate(`/qr/profiles/${encodeURIComponent(activeQrUuid)}?action=switch`)}
-              className="rounded-lg border-2 border-indigo-600 bg-indigo-600 px-3 py-3 text-sm font-bold text-white shadow-md transition-colors hover:bg-indigo-700"
-            >
-              Switch Profile
+              {showProfileManager ? 'Hide Profiles' : 'Switch / Manage Profiles'}
             </button>
           </div>
-        )}
+
+          {/* Expanded 3-Slot Profile Manager */}
+          {showProfileManager && (
+            <div className="mt-3">
+              <QRProfileManager
+                uuid={activeQrUuid || identifierParam || ''}
+                onOpenAddModal={() => setShowAddSecondaryModal(true)}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Add Secondary Profile Modal with Owner OTP 0708 */}
+        <AddSecondaryUserModal
+          uuid={activeQrUuid || identifierParam || ''}
+          isOpen={showAddSecondaryModal}
+          onClose={() => setShowAddSecondaryModal(false)}
+          onSuccess={() => {
+            const currentUuid = activeQrUuid || identifierParam;
+            if (currentUuid) fetchMultiProfileData(currentUuid);
+          }}
+        />
 
         <div className="text-center py-6 border-t border-gray-200">
           <p className="font-bold text-gray-900">INcase - Emergency Response System</p>
