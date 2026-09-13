@@ -100,17 +100,35 @@ export default function ActivateQR() {
           throw new Error((data as { error?: string; reason?: string }).error || (data as { error?: string; reason?: string }).reason || 'Failed to load sticker');
         }
         
-        // Check if this is a multi-profile QR for customer or business profiles
-        if (
-          !searchParams.has('edit') &&
-          data.status === 'active' &&
-          (data.sticker?.activatedBy || (data.sticker?.multiProfileMode && data.sticker?.profileCount)) &&
-          (data.sticker?.type === 'b2c' || data.sticker?.type === 'b2b')
-        ) {
-          if (active) {
-            navigate(`/qr/profiles/${encodeURIComponent(uuid)}`, { replace: true });
-          }
-          return;
+       // If sticker is already activated and not in edit mode, jump straight to emergency info
+if (!searchParams.has('edit') && (data.status === 'active' || data.sticker?.status === 'active')) {
+  if (active) {
+    const activeSticker = data.sticker || (data as any);
+    const identifier = 
+      (typeof activeSticker.activatedBy === 'object' ? (activeSticker.activatedBy?.phoneNumber || activeSticker.activatedBy?.email) : null) ||
+      (typeof activeSticker.activatedBy === 'string' ? activeSticker.activatedBy : null) ||
+      activeSticker.phoneNumber ||
+      activeSticker.serialNumber;
+
+    const qrParam = encodeURIComponent(activeSticker.uuid || uuid);
+
+    if (data.emergencyProfileUrl) {
+      const target = data.emergencyProfileUrl.includes('?') 
+        ? `${data.emergencyProfileUrl}&qrUuid=${qrParam}` 
+        : `${data.emergencyProfileUrl}?qrUuid=${qrParam}`;
+      window.location.replace(target);
+      return;
+    }
+
+    if (identifier) {
+      navigate(`/emergencyinfo/${encodeURIComponent(identifier)}?qrUuid=${qrParam}`, { replace: true });
+      return;
+    }
+
+    navigate(`/qr/profiles/${qrParam}`, { replace: true });
+    return;
+  }
+}
         }
         
         if (active) setCheck(data);
@@ -149,24 +167,57 @@ export default function ActivateQR() {
     }
   }, [check]);
 
-  useEffect(() => {
+ useEffect(() => {
+    // Only redirect if the sticker is active and not explicitly in edit mode
     if (check?.status !== 'active' || searchParams.has('edit')) return;
-    const activeIdentifier = (
-      check.sticker?.activatedBy?.email?.trim()
-      || check.sticker?.activatedBy?.phoneNumber?.trim()
-    );
+
+    const sticker = check.sticker;
+    const qrId = encodeURIComponent(sticker?.uuid || uuid);
+
+    // 1. Check if backend gave a direct emergency profile URL
+    if (check.emergencyProfileUrl) {
+      const url = check.emergencyProfileUrl.includes('?') 
+        ? `${check.emergencyProfileUrl}&qrUuid=${qrId}` 
+        : `${check.emergencyProfileUrl}?qrUuid=${qrId}`;
+      sessionStorage.setItem('activeQrUuid', sticker?.uuid || uuid);
+      window.location.replace(url);
+      return;
+    }
+
+    // 2. Find active phone/identifier across all possible schema formats
+    const activePhone = 
+      (typeof sticker?.activatedBy === 'object' ? sticker?.activatedBy?.phoneNumber : null) ||
+      sticker?.phoneNumber ||
+      (typeof sticker?.activatedBy === 'string' && !sticker.activatedBy.includes('@') && sticker.activatedBy.length <= 15 ? sticker.activatedBy : null) ||
+      sticker?.activeEmergency?.phoneNumber ||
+      sticker?.emergencyContactPhone;
+
+    if (activePhone) {
+      sessionStorage.setItem('activeQrUuid', sticker?.uuid || uuid);
+      window.location.replace(`/emergencyinfo/${encodeURIComponent(activePhone)}?qrUuid=${qrId}`);
+      return;
+    }
+
+    // 3. Fallback: Query Emergency Info directly by QR UUID
+    sessionStorage.setItem('activeQrUuid', sticker?.uuid || uuid);
+    window.location.replace(`/emergencyinfo/${qrId}?qrUuid=${qrId}`);
+  }, [check, searchParams, uuid]);
     const localEmergencyProfileUrl = activeIdentifier
-      ? `${window.location.origin}/emergencyinfo/${encodeURIComponent(activeIdentifier)}`
+   ? `${window.location.origin}/emergencyinfo/${encodeURIComponent(activeIdentifier)}?qrUuid=${encodeURIComponent(check?.sticker?.uuid || uuid)}`
       : null;
     const safeRedirectTo = check.redirectTo && !/\/activate\//i.test(check.redirectTo)
       ? check.redirectTo
       : null;
     const destination = check.emergencyProfileUrl || localEmergencyProfileUrl || safeRedirectTo;
+    let finalDestination = destination;
+if (finalDestination && !finalDestination.includes('qrUuid=')) {
+  finalDestination += `${finalDestination.includes('?') ? '&' : '?'}qrUuid=${encodeURIComponent(check?.sticker?.uuid || uuid)}`;
+}
     if (!destination) return;
     // Remember which sticker this profile came from so the emergency info page
     // can offer "Add Profile" / "Switch Account" even for a not-yet-multi sticker.
     sessionStorage.setItem('activeQrUuid', uuid);
-    window.location.replace(destination);
+    window.location.replace(finalDestination);
   }, [check, searchParams]);
 
   const updateContact = (idx: number, key: keyof EmergencyContact, value: string) => {
