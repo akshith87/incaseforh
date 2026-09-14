@@ -109,17 +109,18 @@ export default function ActivateQR() {
           || data?.phoneNumber 
           || qrParam;
 
-        navigate(`/emergencyinfo/${encodeURIComponent(phone)}?qrUuid=${qrParam}`, { replace: true });
-        return;
+navigate(`/emergencyinfo/${encodeURIComponent(phone)}?qrUuid=${qrParam}`, { replace: true });
+return;
+  }
+}
+        if (active) setCheck(data);
+      } catch (err) {
+        if (active) setError(err instanceof Error ? err.message : 'Failed to load sticker');
+      } finally {
+        if (active) setLoading(false);
       }
     }
-
-    if (active) setCheck(data);
-  } catch (err) {
-    if (active) setError(err instanceof Error ? err.message : 'Failed to load sticker');
-  } finally {
-    if (active) setLoading(false);
-  }
+    
     void load();
     return () => {
       active = false;
@@ -184,24 +185,6 @@ export default function ActivateQR() {
     sessionStorage.setItem('activeQrUuid', sticker?.uuid || uuid);
     window.location.replace(`/emergencyinfo/${qrId}?qrUuid=${qrId}`);
   }, [check, searchParams, uuid]);
-    const localEmergencyProfileUrl = activeIdentifier
-   ? `${window.location.origin}/emergencyinfo/${encodeURIComponent(activeIdentifier)}?qrUuid=${encodeURIComponent(check?.sticker?.uuid || uuid)}`
-      : null;
-    const safeRedirectTo = check.redirectTo && !/\/activate\//i.test(check.redirectTo)
-      ? check.redirectTo
-      : null;
-    const destination = check.emergencyProfileUrl || localEmergencyProfileUrl || safeRedirectTo;
-    let finalDestination = destination;
-if (finalDestination && !finalDestination.includes('qrUuid=')) {
-  finalDestination += `${finalDestination.includes('?') ? '&' : '?'}qrUuid=${encodeURIComponent(check?.sticker?.uuid || uuid)}`;
-}
-    if (!destination) return;
-    // Remember which sticker this profile came from so the emergency info page
-    // can offer "Add Profile" / "Switch Account" even for a not-yet-multi sticker.
-    sessionStorage.setItem('activeQrUuid', uuid);
-    window.location.replace(finalDestination);
-  }, [check, searchParams]);
-
   const updateContact = (idx: number, key: keyof EmergencyContact, value: string) => {
     setContacts((prev) => prev.map((c, i) => (i === idx ? { ...c, [key]: value } : c)));
   };
