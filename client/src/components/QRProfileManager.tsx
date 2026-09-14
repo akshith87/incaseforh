@@ -165,7 +165,6 @@ export const QRProfileManager: React.FC<QRProfileManagerProps> = ({ uuid, onOpen
           </div>
         ))}
       </div>
-    </div>
   );
 };
 
